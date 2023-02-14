@@ -25,6 +25,3 @@ class hawk:
 
     def eat(self):
         pass
-
-
-hawky = hawk()

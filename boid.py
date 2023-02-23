@@ -26,8 +26,15 @@ class boid:
     # axis is defined so they end up moving sideways, need to figure this out
     # this method should implement the three rules with the direction to move in
     # dictated by the relative importance of each rule
-    def move(self, s, a, c):
+    def move(self, flock, nearRange, s, a, c):
         self.velocity = np.random.uniform(0, 1)
+        separate = self.separate(flock, nearRange)
+        separate = separate.norm() * s
+        align = self.align(flock, nearRange)
+        align = align.norm() * a
+        cohere = self.cohere(flock, nearRange)
+        cohere = cohere.norm() * a
+        self.tie.pos = self.tie.pos + (separate + align + cohere) * 0.1
         # if self.tie.pos.x > boxSize:
         #     self.tie.pos.x = 0
         # if self.tie.pos.x < 0:
@@ -40,8 +47,8 @@ class boid:
         #     self.tie.pos.z = 0
         # if self.tie.pos.z < 0:
         #     self.tie.pos.z = boxSize
-        unit = self.tie.axis.norm()
-        self.tie.pos = self.tie.pos + self.velocity * unit * 0.1
+        # unit = self.tie.axis.norm()
+        # self.tie.pos = self.tie.pos + self.velocity * unit * 0.1
     
     # returns scalar distance from boid to another 
     def distanceTo(self, other):
@@ -64,13 +71,18 @@ class boid:
        
     # returns subset of flock containing boids in neighborhood of current boid 
     def getNeighborhood(self, flock, nearRange):
-        for boid in flock:
+        for boid in flock.boids:
             boid.distance = self.distanceTo(boid)
-        flock.sort(key=lambda x: x.distance)
-        return flock[0:nearRange]
+        flock.boids.sort(key=lambda x: x.distance)
+        return flock.boids[0:nearRange]
     
-    def separate(self):
-        pass
+    def separate(self, flock, nearRange):
+        neighborhood = self.getNeighborhood(flock, nearRange)
+        toOther = vector(0,0,0)
+        for boid in neighborhood:
+            toOther += self.r(boid)
+        toOther = toOther / nearRange
+        return -1 * toOther
     
     # returns average heading (axis) of local flockmates
     def align(self, flock, nearRange):

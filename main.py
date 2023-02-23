@@ -5,7 +5,14 @@ from vpython import *
 
 # set environment
 
-flockSize = 10
+flockSize = 1
+nearRange = 20 # this number sets the range of a given boid's "neighborhood"
+
+# tunable parameters (0<p<1, dictate relative imporance of each rule)
+s = 1 # separation
+a = 1 # alignment
+c = 1 # cohesion
+
 
 flock = f.flock(flockSize)
     

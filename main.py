@@ -5,7 +5,7 @@ from vpython import *
 
 # set environment
 
-flockSize = 50
+flockSize = 10
 
 flock = f.flock(flockSize)
     

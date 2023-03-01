@@ -5,36 +5,37 @@ import math
 global boxSize
 boxSize = 100
 
-class boid:
+class boid():
     
     def __init__(self):
+        # creates tie fighter composite shape and places randomly in the scene
         x, y, z = np.random.uniform(-1*boxSize/2, boxSize/2), np.random.uniform(-1*boxSize/2, boxSize/2), np.random.uniform(-1*boxSize/2, boxSize/2)
         center = vector(x,y,z)
         a, b, c = np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1)
         ball = sphere(pos=center, radius=1)
-        rExtension = box(pos=center+vector(1.4,0,0), length=1, width=0.5, height=0.5)
-        lExtension = box(pos=center-vector(1.4,0,0), length=1, width=0.5, height=0.5)
-        rPanel = box(pos=center+vector(2,0,0), length=0.2, height=6, width=4)
-        lPanel = box(pos=center-vector(2,0,0), length=0.2, height=6, width=4)
-        bubble = sphere(pos=center, radius=4.2)
-        bubble.opacity = 0
-        self.tie = compound([ball, rExtension, lExtension, rPanel, lPanel, bubble])
+        rExtension = box(pos=center+vector(0,0,1.4), length=0.5, width=1, height=0.5)
+        lExtension = box(pos=center-vector(0,0,1.4), length=0.5, width=1, height=0.5)
+        rPanel = box(pos=center+vector(0,0,2), length=4, width=0.2, height=6)
+        lPanel = box(pos=center-vector(0,0,2), length=4, width=0.2, height=6)
+        self.tie = compound([ball, rExtension, lExtension, rPanel, lPanel])
         self.tie.axis = vector(a,b,c)
-        # self.cone = cone(pos=vector(x, y, z), axis=vector(a, b, c), length=1, radius=0.3, color=color.blue)
-        self.velocity = np.random.uniform(0.5, 1.5)
+        # sets view radius for neighborhood
+        self.view = 5
         
-    # axis is defined so they end up moving sideways, need to figure this out
-    # this method should implement the three rules with the direction to move in
-    # dictated by the relative importance of each rule
-    def move(self, flock, nearRange, s, a, c):
-        self.velocity = np.random.uniform(0, 1)
-        separate = self.separate(flock, nearRange)
-        separate = separate.norm() * s
-        align = self.align(flock, nearRange)
-        align = align.norm() * a
-        cohere = self.cohere(flock, nearRange)
-        cohere = cohere.norm() * a
-        self.tie.pos = self.tie.pos + (separate + align + cohere) * 0.1
+    # takes in unit vector of desired direction of motion, and moves one step
+    def move(self, vect, speed):
+        self.tie.axis = vect
+        self.tie.pos += self.tie.axis * speed
+        if self.tie.pos.x >= boxSize or self.tie.pos.y >= boxSize or self.tie.pos.z >= boxSize:
+            self.tie.axis = -1 * self.tie.axis
+    
+    # computes vector to move in, based on three rules and their relative importance
+    def moveVect(self, flock, s, a, c):
+        # self.velocity = np.random.uniform(0, 1)
+        separate = self.separate(flock) * s
+        align = self.align(flock) * a
+        cohere = self.cohere(flock) * c
+        return separate + align + cohere
         # if self.tie.pos.x > boxSize:
         #     self.tie.pos.x = 0
         # if self.tie.pos.x < 0:
@@ -58,7 +59,7 @@ class boid:
         
     # checks to see if boid has collided with another 
     def checkOverlap(self, other):
-        if self.tie.bubble.pos in other.tie.bubble.pos: # don't know if this actually works 
+        if self.distanceTo(other) <= 3.5: # this 3.5 is rather arbitraty
             return True
         return False
         
@@ -70,41 +71,35 @@ class boid:
         return vector(x, y, z)
        
     # returns subset of flock containing boids in neighborhood of current boid 
-    def getNeighborhood(self, flock, nearRange):
+    def getNeighborhood(self, flock):
+        neighborhood = []
         for boid in flock.boids:
             boid.distance = self.distanceTo(boid)
-        flock.boids.sort(key=lambda x: x.distance)
-        return flock.boids[0:nearRange]
+            if boid.distance <= self.view:
+                neighborhood.append(boid)
+        return neighborhood
     
-    def separate(self, flock, nearRange):
-        neighborhood = self.getNeighborhood(flock, nearRange)
+    def separate(self, flock):
+        neighborhood = self.getNeighborhood(flock)
         toOther = vector(0,0,0)
         for boid in neighborhood:
             toOther += self.r(boid)
-        toOther = toOther / nearRange
+        toOther = toOther / len(neighborhood)
         return -1 * toOther
     
     # returns average heading (axis) of local flockmates
-    def align(self, flock, nearRange):
-        neighborhood = self.getNeighborhood(flock, nearRange)
-        x = 0
-        y = 0
-        z = 0
+    def align(self, flock):
+        neighborhood = self.getNeighborhood(flock)
+        axis = vector(0,0,0)
         for boid in neighborhood:
-            x += boid.tie.axis.x
-            y += boid.tie.axis.y
-            z += boid.tie.axis.z
-        return vector(x / flock.flockSize, y / flock.flockSize, z / flock.flockSize)
+            axis += boid.tie.axis
+        return norm(axis / flock.flockSize)
     
-    # returns vector from boid to center of mass of local flockmates
-    def cohere(self, flock, nearRange):
-        neighborhood = self.getNeighborhood(flock, nearRange)
-        x = 0
-        y = 0
-        z = 0
+    # returns unit vector from boid to center of mass of local flockmates
+    def cohere(self, flock):
+        neighborhood = self.getNeighborhood(flock)
+        cm = vector(0,0,0)
         for boid in neighborhood:
-            x += boid.tie.pos.x
-            y += boid.tie.pos.y
-            z += boid.tie.pos.z
-        cm = vector(x / flock.flockSize, y / flock.flockSize, z / flock.flockSize)
-        return cm - self.tie.pos
+            cm += boid.tie.pos
+        cm = cm / flock.flockSize
+        return norm(cm - self.tie.pos)

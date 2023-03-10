@@ -15,7 +15,7 @@ speed = 1 # between 0 and 1 ish
 
 flock = f.flock(flockSize)
     
-# hawk = h.hawk()
+hawk = h.hawk()
 
 def setSep(s):
     ws.text = '{:1.2f}'.format(s.value)
@@ -52,4 +52,4 @@ while 1:
     rate(100)
     for boid in flock.boids:
         boid.move(boid.moveVect(flock, a=aa.value, c=cc.value, s=ss.value), speed)
-    # hawk.move()
+    hawk.move(flock)

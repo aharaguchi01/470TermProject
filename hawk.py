@@ -7,36 +7,31 @@ global boxSize
 boxSize = 100
 class hawk:
     def __init__(self):
-            # creates tie fighter composite shape and places randomly in the scene
+        # creates x-wing composite shape and places randomly in the scene
         x, y, z = np.random.uniform(-1 * boxSize / 2, boxSize / 2), np.random.uniform(-1 * boxSize / 2,boxSize / 2), np.random.uniform(-1 * boxSize / 2, boxSize / 2)
         center = vector(x, y, z)
         a, b, c = np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1)
+        d, e, f = np.random.uniform(0, 12), np.random.uniform(0, 12), np.random.uniform(0, 12)
         body = cone(pos=center, axis=vector(0, 0, 6), radius=0.8, color=color.red)
         rPanel = box(pos=center, axis=vector(1, 0.5, 0), length=0.2, width=2, height=10, color=color.orange)
         lPanel = box(pos=center, axis=vector(1, -0.5, 0), length=0.2, width=2, height=10, color=color.orange)
         self.x_wing = compound([body, rPanel, lPanel])
         self.x_wing.axis = vector(a, b, c)
-        self.x_wing.velocity = vector(a,b,c)
-        self.view = 70 # view radius for neighborhood
-        self.boom = 1
+        self.x_wing.velocity = vector(d, e, f)
+        self.view = 20 # view radius for neighborhood
+        self.boom = 5
 
     def move(self, flock):
-        # unit = self.x_wing.axis.norm()
-        # self.x_wing.pos = self.x_wing.pos + self.x_wing.velocity*unit*dt
-        # if self.x_wing.pos.x > 20 or self.x_wing.pos.x < 0:
-        #     self.x_wing.axis.x = -self.x_wing.axis.x
-        # if self.x_wing.pos.y > 20 or self.x_wing.pos.y < 0:
-        #     self.x_wing.axis.y = -self.x_wing.axis.y
-        # if self.x_wing.pos.z > 20 or self.x_wing.pos.z < 0:
-        #     self.x_wing.axis.z = -self.x_wing.axis.z
         self.chase(flock)
+        self.eat(flock)
         self.edge()
-        self.x_wing.pos += self.x_wing.velocity
+        self.x_wing.axis = self.x_wing.velocity.norm()
+        self.x_wing.pos += self.x_wing.velocity.norm()
 
     # keeps hawk within bounds
     def edge(self):
-        buffer = 90
-        turn = 1
+        buffer = 80
+        turn = 7
         if self.x_wing.pos.x < -buffer / 2:
             self.x_wing.velocity.x += turn
         if self.x_wing.pos.x > buffer / 2:
@@ -50,7 +45,7 @@ class hawk:
         if self.x_wing.pos.z > buffer / 2:
             self.x_wing.velocity.z -= turn
 
-    # returns scalar distance from hawk to another
+    # returns scalar distance from hawk to boid
     def distanceTo(self, other):
         return math.sqrt(pow(other.tie.pos.x - self.x_wing.pos.x, 2)
                          + pow(other.tie.pos.y - self.x_wing.pos.y, 2)
@@ -59,17 +54,22 @@ class hawk:
     def getNeighborhood(self, flock):
         neighborhood = []
         for boid in flock:
-            distance = self.distanceTo(boid)
-            if distance <= self.view:
+            boid.distance = self.distanceTo(boid)
+            if boid.distance <= self.view and boid.tie.visible == True:
                 neighborhood.append(boid)
-        return neighborhood.sort(reverse=True)
+        neighborhood.sort(key=lambda x: x.distance)
+        return neighborhood
 
     def chase(self, flock):
         neighborhood = self.getNeighborhood(flock)
-        self.x_wing.velocity += (neighborhood[0].tie.axis - self.x_wing.axis)
+        if len(neighborhood) > 0:
+            self.x_wing.velocity += (neighborhood[0].tie.pos - self.x_wing.pos)
 
-    def eat(self, other):
-        dist = self.distanceTo(other)
-        if dist < self.boom:
-            other.delete()
+    def eat(self, flock):
+        neighborhood = self.getNeighborhood(flock)
+        if len(neighborhood) > 0:
+            dist = self.distanceTo(neighborhood[0])
+            if dist < self.boom:
+                # del neighborhood[0].tie
+                neighborhood[0].tie.visible = False
 

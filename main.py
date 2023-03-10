@@ -4,15 +4,15 @@ import flock as f
 from vpython import * 
 
 # box to help with visualization, remove later
-side = 50.0
-thk = 0.3
-s2 = 2*side - thk
-s3 = 2*side + thk
-wallR = box (pos=vector( side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
-wallL = box (pos=vector(-side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
-wallB = box (pos=vector(0, -side, 0), size=vector(s3, thk, s3),  color = color.green)
-wallT = box (pos=vector(0,  side, 0), size=vector(s3, thk, s3),  color = color.green)
-wallBK = box(pos=vector(0, 0, -side), size=vector(s2, s2, thk), color = color.green)
+# side = 50.0
+# thk = 0.3
+# s2 = 2*side - thk
+# s3 = 2*side + thk
+# wallR = box (pos=vector( side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
+# wallL = box (pos=vector(-side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
+# wallB = box (pos=vector(0, -side, 0), size=vector(s3, thk, s3),  color = color.green)
+# wallT = box (pos=vector(0,  side, 0), size=vector(s3, thk, s3),  color = color.green)
+# wallBK = box(pos=vector(0, 0, -side), size=vector(s2, s2, thk), color = color.green)
 
 flockSize = 20
 flock = f.flock(flockSize)
@@ -49,9 +49,9 @@ scene.append_to_caption('       ')
 scene.append_to_caption('\n\n')
 
 scene.autoscale = False
-
 while 1:
     rate(10)
     for boid in flock.boids:
-        boid.move(flock.boids, a=aa.value, c=cc.value, s=ss.value)
-    hawk.move(flock)
+        if boid.tie.visible == True:
+            boid.move(hawk, flock.boids, a=aa.value, c=cc.value, s=ss.value, r=0.5)
+    hawk.move(flock.boids)

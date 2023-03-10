@@ -14,11 +14,11 @@ class boid():
         a, b, c = np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1)
         d, e, f = np.random.uniform(0, 12), np.random.uniform(0, 12), np.random.uniform(0, 12)
         # self.tie = cone(pos=center, length=5, radius=2, color = color.black)
-        ball = simple_sphere(pos=center, radius=1)
-        rExtension = box(pos=center+vector(0,0,1.4), length=0.5, width=1, height=0.5)
-        lExtension = box(pos=center-vector(0,0,1.4), length=0.5, width=1, height=0.5)
-        rPanel = box(pos=center+vector(0,0,2), length=4, width=0.2, height=6)
-        lPanel = box(pos=center-vector(0,0,2), length=4, width=0.2, height=6)
+        ball = simple_sphere(pos=center, radius=1, color=color.gray(0.5))
+        rExtension = box(pos=center+vector(0,0,1.4), length=0.5, width=1, height=0.5, color=color.gray(0.5))
+        lExtension = box(pos=center-vector(0,0,1.4), length=0.5, width=1, height=0.5, color=color.gray(0.5))
+        rPanel = box(pos=center+vector(0,0,2), length=4, width=0.2, height=6, color=color.gray(0.5))
+        lPanel = box(pos=center-vector(0,0,2), length=4, width=0.2, height=6, color=color.gray(0.5))
         self.tie = compound([ball, rExtension, lExtension, rPanel, lPanel])
         self.tie.axis = vector(a,b,c)
         self.tie.velocity = vector(d,e,f)
@@ -26,10 +26,11 @@ class boid():
         
         
     # moves one step based on changing axis
-    def move(self, flock, a, c, s):
+    def move(self, hawk, flock, a, c, s, r):
         self.cohere(flock, c)
         self.separate(flock, s)
         self.align(flock, a)
+        self.run(hawk, r)
         self.edge()
         # self.tie.pos += self.tie.axis.norm() * speed
         self.tie.axis = self.tie.velocity.norm()
@@ -51,33 +52,26 @@ class boid():
             self.tie.velocity.z += turn
         if self.tie.pos.z > buffer / 2:
             self.tie.velocity.z -= turn
-        # if self.tie.pos.x < -buffer / 2:
-        #     self.tie.axis.x += turn
-        # if self.tie.pos.x > buffer / 2:
-        #     self.tie.axis.x -= turn
-        # if self.tie.pos.y < -buffer / 2:
-        #     self.tie.axis.y += turn
-        # if self.tie.pos.y > buffer / 2:
-        #     self.tie.axis.y -= turn
-        # if self.tie.pos.z < -buffer / 2:
-        #     self.tie.axis.z += turn
-        # if self.tie.pos.z > buffer / 2:
-        #     self.tie.axis.z -= turn
-
     
     # returns scalar distance from boid to another 
     def distanceTo(self, other):
         return math.sqrt(pow(other.tie.pos.x - self.tie.pos.x, 2)
                          + pow(other.tie.pos.y - self.tie.pos.y, 2)
                          + pow(other.tie.pos.z - self.tie.pos.z, 2))
-       
+
+    # returns scalar distance from boid to another 
+    def distanceToHawk(self, hawk):
+        return math.sqrt(pow(hawk.x_wing.pos.x - self.tie.pos.x, 2)
+                         + pow(hawk.x_wing.pos.y - self.tie.pos.y, 2)
+                         + pow(hawk.x_wing.pos.z - self.tie.pos.z, 2))
+         
     # returns subset of flock containing boids in neighborhood of current boid 
     def getNeighborhood(self, flock):
         neighborhood = []
         for boid in flock:
             if boid != self:
                 distance = self.distanceTo(boid)
-                if distance <= self.view:
+                if distance <= self.view and boid.tie.visible == True:
                     neighborhood.append(boid)
         return neighborhood
     
@@ -117,4 +111,10 @@ class boid():
             cm.z = cm.z / len(neighborhood)
             # self.tie.axis += (cm - self.tie.pos) * c
             self.tie.velocity += (cm - self.tie.pos) * c
+            
+    # oh no
+    def run(self, hawk, r):
+        runDistance = self.view
+        if self.distanceToHawk(hawk) < runDistance:
+            self.tie.velocity += (self.tie.pos - hawk.x_wing.pos) * r
         

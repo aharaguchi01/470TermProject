@@ -12,55 +12,57 @@ class boid():
         x, y, z = np.random.uniform(-1*boxSize/2, boxSize/2), np.random.uniform(-1*boxSize/2, boxSize/2), np.random.uniform(-1*boxSize/2, boxSize/2)
         center = vector(x,y,z)
         a, b, c = np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1)
+        d, e, f = np.random.uniform(0, 12), np.random.uniform(0, 12), np.random.uniform(0, 12)
         # self.tie = cone(pos=center, length=5, radius=2, color = color.black)
-        ball = sphere(pos=center, radius=1)
+        ball = simple_sphere(pos=center, radius=1)
         rExtension = box(pos=center+vector(0,0,1.4), length=0.5, width=1, height=0.5)
         lExtension = box(pos=center-vector(0,0,1.4), length=0.5, width=1, height=0.5)
         rPanel = box(pos=center+vector(0,0,2), length=4, width=0.2, height=6)
         lPanel = box(pos=center-vector(0,0,2), length=4, width=0.2, height=6)
         self.tie = compound([ball, rExtension, lExtension, rPanel, lPanel])
         self.tie.axis = vector(a,b,c)
-        self.tie.velocity = vector(a,b,c)
-        self.view = 70 # view radius for neighborhood 
+        self.tie.velocity = vector(d,e,f)
+        self.view = 20 # view radius for neighborhood 
         
         
     # moves one step based on changing axis
-    def move(self, flock, speed, a, c, s):
+    def move(self, flock, a, c, s):
         self.cohere(flock, c)
         self.separate(flock, s)
         self.align(flock, a)
         self.edge()
         # self.tie.pos += self.tie.axis.norm() * speed
-        self.tie.pos += self.tie.velocity
+        self.tie.axis = self.tie.velocity.norm()
+        self.tie.pos += self.tie.velocity.norm()
         
     # keeps boid within bounds
     def edge(self):
         buffer = 90
-        turn = 1;
+        turn = 5
         if self.tie.pos.x < -buffer / 2:
-            self.tie.velocity.x += turn;
+            self.tie.velocity.x += turn
         if self.tie.pos.x > buffer / 2:
-            self.tie.velocity.x -= turn;
+            self.tie.velocity.x -= turn
         if self.tie.pos.y < -buffer / 2:
-            self.tie.velocity.y += turn;
+            self.tie.velocity.y += turn
         if self.tie.pos.y > buffer / 2:
-            self.tie.velocity.y -= turn;
+            self.tie.velocity.y -= turn
         if self.tie.pos.z < -buffer / 2:
-            self.tie.velocity.z += turn;
+            self.tie.velocity.z += turn
         if self.tie.pos.z > buffer / 2:
-            self.tie.velocity.z -= turn;
+            self.tie.velocity.z -= turn
         # if self.tie.pos.x < -buffer / 2:
-        #     self.tie.axis.x += turn;
+        #     self.tie.axis.x += turn
         # if self.tie.pos.x > buffer / 2:
-        #     self.tie.axis.x -= turn;
+        #     self.tie.axis.x -= turn
         # if self.tie.pos.y < -buffer / 2:
-        #     self.tie.axis.y += turn;
+        #     self.tie.axis.y += turn
         # if self.tie.pos.y > buffer / 2:
-        #     self.tie.axis.y -= turn;
+        #     self.tie.axis.y -= turn
         # if self.tie.pos.z < -buffer / 2:
-        #     self.tie.axis.z += turn;
+        #     self.tie.axis.z += turn
         # if self.tie.pos.z > buffer / 2:
-        #     self.tie.axis.z -= turn;
+        #     self.tie.axis.z -= turn
 
     
     # returns scalar distance from boid to another 
@@ -73,9 +75,10 @@ class boid():
     def getNeighborhood(self, flock):
         neighborhood = []
         for boid in flock:
-            distance = self.distanceTo(boid)
-            if distance <= self.view:
-                neighborhood.append(boid)
+            if boid != self:
+                distance = self.distanceTo(boid)
+                if distance <= self.view:
+                    neighborhood.append(boid)
         return neighborhood
     
     # changes axis away from other boids
@@ -105,9 +108,13 @@ class boid():
         neighborhood = self.getNeighborhood(flock)
         cm = vector(0,0,0)
         for boid in neighborhood:
-            cm += boid.tie.pos
+            cm.x += boid.tie.pos.x
+            cm.y += boid.tie.pos.y
+            cm.z += boid.tie.pos.z
         if len(neighborhood) > 0:
-            cm = cm / len(neighborhood)
+            cm.x = cm.x / len(neighborhood)
+            cm.y = cm.y / len(neighborhood)
+            cm.z = cm.z / len(neighborhood)
             # self.tie.axis += (cm - self.tie.pos) * c
-            self.tie.velocity + (cm - self.tie.pos) * c
+            self.tie.velocity += (cm - self.tie.pos) * c
         

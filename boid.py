@@ -115,6 +115,6 @@ class boid():
     # oh no
     def run(self, hawk, r):
         runDistance = self.view
-        if self.distanceToHawk(hawk) < runDistance:
+        if self.distanceToHawk(hawk) < runDistance: # and hawk.x_wing.visible == True:
             self.tie.velocity += (self.tie.pos - hawk.x_wing.pos) * r
         

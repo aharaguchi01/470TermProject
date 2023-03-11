@@ -14,10 +14,13 @@ from vpython import *
 # wallT = box (pos=vector(0,  side, 0), size=vector(s3, thk, s3),  color = color.green)
 # wallBK = box(pos=vector(0, 0, -side), size=vector(s2, s2, thk), color = color.green)
 
+scene.title = "A New Hope\n"
+
 flockSize = 20
 flock = f.flock(flockSize)
     
 hawk = h.hawk()
+
 
 def setSep(s):
     ws.text = '{:1.2f}'.format(s.value)
@@ -48,7 +51,7 @@ scene.append_to_caption(' Coherence\n')
 scene.append_to_caption('       ')
 scene.append_to_caption('\n\n')
 
-scene.autoscale = False
+# scene.autoscale = False
 while 1:
     rate(10)
     for boid in flock.boids:

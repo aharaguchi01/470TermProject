@@ -3,24 +3,16 @@ import hawk as h
 import flock as f
 from vpython import * 
 
-# box to help with visualization, remove later
-# side = 50.0
-# thk = 0.3
-# s2 = 2*side - thk
-# s3 = 2*side + thk
-# wallR = box (pos=vector( side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
-# wallL = box (pos=vector(-side, 0, 0), size=vector(thk, s2, s3),  color = color.green)
-# wallB = box (pos=vector(0, -side, 0), size=vector(s3, thk, s3),  color = color.green)
-# wallT = box (pos=vector(0,  side, 0), size=vector(s3, thk, s3),  color = color.green)
-# wallBK = box(pos=vector(0, 0, -side), size=vector(s2, s2, thk), color = color.green)
-
 scene.title = "A New Hope\n"
 
 flockSize = 20
 flock = f.flock(flockSize)
-    
-hawk = h.hawk()
 
+global includeHawk
+includeHawk = True
+    
+if includeHawk:
+    hawk = h.hawk()
 
 def setSep(s):
     ws.text = '{:1.2f}'.format(s.value)
@@ -51,10 +43,13 @@ scene.append_to_caption(' Coherence\n')
 scene.append_to_caption('       ')
 scene.append_to_caption('\n\n')
 
-# scene.autoscale = False
 while 1:
     rate(10)
     for boid in flock.boids:
         if boid.tie.visible == True:
-            boid.move(hawk, flock.boids, a=aa.value, c=cc.value, s=ss.value, r=0.5)
-    hawk.move(flock.boids)
+            if includeHawk:
+                boid.move(hawk, flock.boids, a=aa.value, c=cc.value, s=ss.value, r=0.5)
+            else:
+                boid.moveNoHawk(flock.boids, a=aa.value, c=cc.value, s=ss.value, r=0.5)
+    if includeHawk:
+        hawk.move(flock.boids)

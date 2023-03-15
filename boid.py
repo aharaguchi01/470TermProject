@@ -13,7 +13,6 @@ class boid():
         center = vector(x,y,z)
         a, b, c = np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1)
         d, e, f = np.random.uniform(0, 12), np.random.uniform(0, 12), np.random.uniform(0, 12)
-        # self.tie = cone(pos=center, length=5, radius=2, color = color.black)
         ball = simple_sphere(pos=center, radius=1, color=color.gray(0.5))
         rExtension = box(pos=center+vector(0,0,1.4), length=0.5, width=1, height=0.5, color=color.gray(0.5))
         lExtension = box(pos=center-vector(0,0,1.4), length=0.5, width=1, height=0.5, color=color.gray(0.5))
@@ -23,6 +22,7 @@ class boid():
         self.tie.axis = vector(a,b,c)
         self.tie.velocity = vector(d,e,f)
         self.view = 20 # view radius for neighborhood 
+        self.runView = 10
         
         
     # moves one step based on changing axis
@@ -32,7 +32,15 @@ class boid():
         self.align(flock, a)
         self.run(hawk, r)
         self.edge()
-        # self.tie.pos += self.tie.axis.norm() * speed
+        self.tie.axis = self.tie.velocity.norm()
+        self.tie.pos += self.tie.velocity.norm()
+        
+    # moves one step based on changing axis
+    def moveNoHawk(self, flock, a, c, s, r):
+        self.cohere(flock, c)
+        self.separate(flock, s)
+        self.align(flock, a)
+        self.edge()
         self.tie.axis = self.tie.velocity.norm()
         self.tie.pos += self.tie.velocity.norm()
         
@@ -83,7 +91,6 @@ class boid():
             if boid != self:
                 if self.distanceTo(boid) < minDistance:
                     move += self.tie.pos - boid.tie.pos
-        # self.tie.axis += move * s
         self.tie.velocity += move * s
     
     # changes axis to align with flockmates
@@ -94,7 +101,6 @@ class boid():
             avg += boid.tie.axis
         if len(neighborhood) > 0:
             avg = avg / len(neighborhood)
-            # self.tie.axis += (avg - self.tie.axis) * a
             self.tie.velocity += (avg - self.tie.axis) * a
       
     # changes axis to move towards neighborhood center of mass      
@@ -109,12 +115,11 @@ class boid():
             cm.x = cm.x / len(neighborhood)
             cm.y = cm.y / len(neighborhood)
             cm.z = cm.z / len(neighborhood)
-            # self.tie.axis += (cm - self.tie.pos) * c
             self.tie.velocity += (cm - self.tie.pos) * c
             
     # oh no
     def run(self, hawk, r):
-        runDistance = self.view
-        if self.distanceToHawk(hawk) < runDistance: # and hawk.x_wing.visible == True:
+        runDistance = self.runView
+        if self.distanceToHawk(hawk) < runDistance:
             self.tie.velocity += (self.tie.pos - hawk.x_wing.pos) * r
         

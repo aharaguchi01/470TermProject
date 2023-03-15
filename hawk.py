@@ -1,4 +1,3 @@
-# implement hawk class
 import numpy as np
 from vpython import *
 import math
@@ -18,7 +17,7 @@ class hawk:
         self.x_wing = compound([body, rPanel, lPanel])
         self.x_wing.axis = vector(a, b, c)
         self.x_wing.velocity = vector(d, e, f)
-        self.view = 20 # view radius for neighborhood
+        self.view = 200 # view radius for neighborhood
         self.boom = 5
 
     def move(self, flock):
@@ -26,7 +25,7 @@ class hawk:
         self.eat(flock)
         self.edge()
         self.x_wing.axis = self.x_wing.velocity.norm()
-        self.x_wing.pos += self.x_wing.velocity.norm()
+        self.x_wing.pos += self.x_wing.velocity.norm() * 2
 
     # keeps hawk within bounds
     def edge(self):
@@ -68,8 +67,7 @@ class hawk:
     def eat(self, flock):
         neighborhood = self.getNeighborhood(flock)
         if len(neighborhood) > 0:
-            dist = self.distanceTo(neighborhood[0])
-            if dist < self.boom:
-                # del neighborhood[0].tie
-                neighborhood[0].tie.visible = False
-
+            for boid in neighborhood:
+                dist = self.distanceTo(boid)
+                if dist < self.boom:
+                    boid.tie.visible = False
